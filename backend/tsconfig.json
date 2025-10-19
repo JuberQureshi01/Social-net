@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    /* Visit https://aka.ms/tsconfig to read more about this file */
+
+    /* Language and Environment */
+    "target": "es2020",
+
+    /* Modules */
+    "module": "commonjs",
+    "rootDir": "./src", // This tells TypeScript where your source code is.
+
+    /* Emit */
+    "outDir": "./build", // This tells TypeScript where to put the compiled JavaScript.
+
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Type Checking */
+    "strict": true,
+
+    /* Completeness */
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"], // Make sure to compile everything inside the src folder.
+  "exclude": ["node_modules"]
+}
