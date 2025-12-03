@@ -46,7 +46,6 @@ const mutations = {
 
 const extraResolvers = {
   User: {
-
     tweets: (parent: User) =>
       prismaClient.tweet.findMany({ 
         where: { authorId: parent.id },

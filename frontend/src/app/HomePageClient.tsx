@@ -15,7 +15,8 @@ const TWEET_LIMIT = 10;
 
 export function HomePageClient() {
   const { user } = useCurrentUser();
-  const bottomRef = useRef(null);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null); 
 
   const { data, fetchNextPage, hasNextPage, isLoading, isError } =
     useInfiniteQuery({
@@ -43,20 +44,26 @@ export function HomePageClient() {
     });
 
   useEffect(() => {
+    if (!containerRef.current || !bottomRef.current) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage) {
           fetchNextPage();
         }
       },
-      { threshold: 1 }
+      {
+        root: containerRef.current,            
+        rootMargin: "0px 0px 200px 0px",     
+        threshold: 0.1,                      
+      }
     );
 
-    if (bottomRef.current) observer.observe(bottomRef.current);
+    observer.observe(bottomRef.current);
     return () => {
-      if (bottomRef.current) observer.unobserve(bottomRef.current);
+      observer.disconnect();
     };
-  }, [bottomRef, hasNextPage, fetchNextPage]);
+  }, [hasNextPage, fetchNextPage]);
 
   const tweets = data?.pages.flatMap((page) => page) ?? [];
 
@@ -65,8 +72,13 @@ export function HomePageClient() {
       <div className="col-span-2 sm:col-span-3 pt-1 flex sm:justify-end pr-4 relative">
         <LeftSidebar user={user} />
       </div>
-      <div className="col-span-10 sm:col-span-7 border-x-[0.5px] border-zinc-700 overflow-y-scroll">
-        {user && <CreateTweet />}
+
+      <div
+        ref={containerRef}
+        className="col-span-10 sm:col-span-5 border-x-[0.5px] border-zinc-700 overflow-y-scroll"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        <CreateTweet />
         {isLoading && (
           <>
             <SkeletonLoader />
@@ -87,10 +99,12 @@ export function HomePageClient() {
           )}
 
         {!isLoading && hasNextPage && (
-          <div ref={bottomRef} style={{ height: "1px" }} />
+          <div ref={bottomRef} style={{ height: "60px" }} />
         )}
       </div>
-      <div className="col-span-0 sm:col-span-2 p-5">
+      <div className="col-span-0 hidden sm:block sm:col-span-4 p-5 ">
+        <span className="text-xl">People You Would Like to Follow</span>
+        <p className="flex items-center justify-center text-zinc-500 h-full">Currently No Data Available</p>
       </div>
     </div>
   );

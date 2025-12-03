@@ -11,7 +11,7 @@ import Image from "next/image";
 import { FaImage } from "react-icons/fa6";
 import axios from "axios";
 
-function CreateTweet () {
+function CreateTweet() {
   const { user } = useCurrentUser();
   const queryClient = useQueryClient();
   const [content, setContent] = useState("");
@@ -28,7 +28,7 @@ function CreateTweet () {
     return () => URL.revokeObjectURL(objectUrl);
   }, [imageFile]);
 
-const mutation: any = useMutation({
+  const mutation: any = useMutation({
     mutationFn: (payload: { content: string; imageURL?: string }) =>
       graphqlClient.request(createTweetMutation, { payload }),
 
@@ -43,19 +43,26 @@ const mutation: any = useMutation({
     },
   });
 
-  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) setImageFile(file);
-  }, []);
+  const handleFileSelect = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) setImageFile(file);
+    },
+    []
+  );
 
   const handleCreateTweet = useCallback(async () => {
-    if (!content.trim() && !imageFile) return toast.error("Cannot post an empty tweet.");
-
+    if (!user) {
+      toast.error("Logged In First.");
+      return;
+    }
+    if (!content.trim() && !imageFile)
+      return toast.error("Cannot post an empty tweet.");
     let imageURL = "";
     if (imageFile) {
       toast.loading("Uploading image...", { id: "image-upload" });
       try {
-        const data :any = await graphqlClient.request(
+        const data: any = await graphqlClient.request(
           getSignedURLForTweetImageQuery,
           {
             imageName: imageFile.name,
@@ -85,14 +92,13 @@ const mutation: any = useMutation({
     mutation.mutate({ content, imageURL });
   }, [content, imageFile, mutation]);
 
-  if (!user) return null;
   const canPost = content.trim().length > 0 || imageFile !== null;
 
   return (
     <div className="border-b border-gray-600 p-4">
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-shrink-0">
-          {user.profileImageUrl && (
+          {user && user.profileImageUrl && (
             <Image
               className="rounded-full"
               src={user.profileImageUrl}
@@ -124,21 +130,23 @@ const mutation: any = useMutation({
           <div className="mt-3 flex justify-between items-center flex-wrap gap-2">
             <label
               htmlFor="image-input"
-              className="cursor-pointer text-blue-500 hover:text-blue-400 flex items-center gap-1"
+              className={`cursor-pointer ${
+                user ? "text-blue-500 hover:text-blue-400" : "text-gray-500"
+              } flex items-center gap-1`}
             >
               <FaImage className="text-xl" />
               <span className="hidden sm:inline">Add image</span>
             </label>
             <input
               id="image-input"
-              type="file"
+              type={`${user ? "file" : "text"}`}
               className="hidden"
               accept="image/jpeg,image/png,image/webp"
               onChange={handleFileSelect}
             />
             <button
               onClick={handleCreateTweet}
-              disabled={mutation.isLoading|| !canPost}
+              disabled={mutation.isLoading || !canPost}
               className="bg-[#1d9bf0] font-semibold text-sm py-2 px-4 rounded-full disabled:opacity-50"
             >
               Post
@@ -148,6 +156,6 @@ const mutation: any = useMutation({
       </div>
     </div>
   );
-};
+}
 
 export default CreateTweet;

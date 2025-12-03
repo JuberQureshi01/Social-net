@@ -17,14 +17,17 @@ import {
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
-function FeedCard ({ data }:{data:Tweet}) {
+function FeedCard({ data }: { data: Tweet }) {
   const { user: currentUser } = useCurrentUser();
   const queryClient = useQueryClient();
   const router = useRouter();
   const likeMutation = useMutation({
-    mutationFn: () =>
-      graphqlClient.request(likeTweetMutation, { id: data.id }),
-    
+    mutationFn: async() => {
+      const res = await graphqlClient.request(likeTweetMutation, {
+        id: data.id,
+      });
+      queryClient.invalidateQueries({ queryKey: ["all-tweets"] });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-tweets"] });
     },
@@ -36,7 +39,7 @@ function FeedCard ({ data }:{data:Tweet}) {
   const unlikeMutation = useMutation({
     mutationFn: () =>
       graphqlClient.request(unlikeTweetMutation, { id: data.id }),
-    
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-tweets"] });
     },
@@ -55,7 +58,7 @@ function FeedCard ({ data }:{data:Tweet}) {
     (event: React.MouseEvent<HTMLDivElement>) => {
       event.stopPropagation();
       if (!currentUser) return toast.error("Please login to like a tweet.");
-      amILiking ? unlikeMutation.mutate() : likeMutation.mutate();
+      const res = amILiking ? unlikeMutation.mutate() : likeMutation.mutate();
     },
     [amILiking, currentUser, likeMutation, unlikeMutation]
   );
@@ -64,7 +67,7 @@ function FeedCard ({ data }:{data:Tweet}) {
     router.push(`/tweet/${data.id}`);
   }, [router, data.id]);
   return (
-   <div
+    <div
       onClick={handleCardClick}
       className="border-b border-zinc-700 p-4 hover:bg-zinc-900 transition-all duration-200 cursor-pointer"
     >
@@ -96,7 +99,7 @@ function FeedCard ({ data }:{data:Tweet}) {
               {data.author?.firstName} {data.author?.lastName}
             </Link>
             <span className="text-xs text-zinc-500 font-normal ml-2">
-              @{data.author?.email?.split('@')[0]}
+              @{data.author?.email?.split("@")[0]}
             </span>
           </h5>
 
@@ -104,11 +107,11 @@ function FeedCard ({ data }:{data:Tweet}) {
 
           {data.imageURL && (
             <Image
-              width={400}
-              height={300}
+              width={250}
+              height={150}
               src={data.imageURL}
               alt="tweet-image"
-              className="rounded-xl mt-3 w-full border border-zinc-700 object-cover"
+              className="rounded-xl mt-3 max-h-[250px] border border-zinc-700 object-cover bg-red-300"
             />
           )}
 
@@ -147,12 +150,11 @@ function FeedCard ({ data }:{data:Tweet}) {
                 {data.likes?.length || 0}
               </span>
             </div>
-            
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
 
 export default FeedCard;

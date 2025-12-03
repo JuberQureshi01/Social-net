@@ -10,7 +10,7 @@ import {
   unfollowUserMutation,
 } from "@/graphql/mutations/user";
 import { User } from "@/gql/graphql";
-import  LeftSidebar  from "../components/LeftSidebar";
+import LeftSidebar from "../components/LeftSidebar";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
@@ -32,10 +32,11 @@ export default function UserProfilePage({
 
   const { data: userProfile, isLoading } = useQuery<User, Error>({
     queryKey: ["user-profile", params.id],
-    queryFn: () =>
-      graphqlClient
+    queryFn: () => {
+     return graphqlClient
         .request(getUserByIdQuery, { id: params.id })
-        .then((data: any) => data.getUserById as User),
+        .then((data: any) => data.getUserById as User);
+    },
     enabled: !!params.id,
   });
 
@@ -78,8 +79,7 @@ export default function UserProfilePage({
     }
   };
 
-  if (isLoading)
-    return <ProfilePageSkeleton/>
+  if (isLoading) return <ProfilePageSkeleton />;
   if (!userProfile)
     return <div className="p-4 text-center">User not found.</div>;
 
@@ -194,7 +194,7 @@ export default function UserProfilePage({
           </div>
         </div>
 
-        <div>{RenderContent({activeTab,userProfile})}</div>
+        <div>{RenderContent({ activeTab, userProfile })}</div>
       </div>
       <div className="hidden sm:block col-span-0 sm:col-span-2 p-5"></div>
     </div>
